@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AnimeJS Staggered Grid Effect</title>
+
+    <style>
+        :root {
+            --g1: rgb(0, 0, 0);
+            --g2: rgb(0, 230, 135);
+        }
+
+        @keyframes background-pan {
+            from {
+                background-position: 0% center;
+            }
+
+            to {
+                background-position: -200% center;
+            }
+        }
+
+        body {
+            animation: background-pan 10s linear infinite;
+            background: linear-gradient(to right,
+                    var(--g1),
+                    var(--g2),
+                    var(--g1));
+            background-size: 300%;
+            height: 100vh;
+            overflow: hidden;
+            margin: 0px;
+        }
+
+        body.toggled {
+            animation: none;
+        }
+
+        body.toggled>#title {
+            opacity: 0;
+        }
+
+        body.toggled>#icon {
+            opacity: 1;
+        }
+
+        body.toggled>#tiles>.tile:hover {
+            opacity: 0.1 !important;
+        }
+
+        .centered {
+            left: 50%;
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #tiles {
+            /* height: calc(100vh - 1px);
+            width: calc(100vw - 1px); */
+
+            height: calc(100vh - 1px);
+            width: calc(100vw - 1px);
+
+            position: relative;
+            z-index: 2;
+
+            display: grid;
+            grid-template-columns: repeat(var(--columns), 1fr);
+            grid-template-rows: repeat(var(--rows), 1fr);
+        }
+
+        .tile {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .tile:hover:before {
+            background-color: rgb(30, 30, 30);
+        }
+
+        .tile:before {
+            background-color: rgb(15, 15, 15);
+            content: "";
+            inset: 0.5px;
+            position: absolute;
+        }
+
+        #title {
+            color: white;
+            font-family: "Rubik", sans-serif;
+            font-size: 6vw;
+            margin: 0px;
+            pointer-events: none;
+            transition: opacity 1200ms ease;
+            width: 50vw;
+            z-index: 3;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="tiles"></div>
+
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js'></script>
+
+</body>
+
+<script>
+    const wrapper = document.getElementById("tiles");
+
+    let columns = 0,
+        rows = 0,
+        toggled = false;
+
+    const toggle = () => {
+        toggled = !toggled;
+
+        document.body.classList.toggle("toggled");
+    }
+
+    const handleOnClick = index => {
+        toggle();
+
+        anime({
+            targets: ".tile",
+            opacity: toggled ? 0 : 1,
+            delay: anime.stagger(100, {
+                grid: [columns, rows],
+                from: index
+            })
+        });
+    }
+
+    const createTile = index => {
+        const tile = document.createElement("div");
+
+        tile.classList.add("tile");
+
+        tile.style.opacity = toggled ? 0 : 1;
+
+        tile.onclick = e => handleOnClick(index);
+
+        return tile;
+    }
+
+    const createTiles = quantity => {
+        Array.from(Array(quantity)).map((tile, index) => {
+            wrapper.appendChild(createTile(index));
+        });
+    }
+
+    const createGrid = () => {
+        wrapper.innerHTML = "";
+
+        //const size = document.body.clientWidth > 800 ? 50 : 25;
+
+        // columns = Math.floor(document.body.clientWidth / size);
+        // rows = Math.floor(document.body.clientHeight / size);
+
+        const sizeGrid = 75;
+        columns = Math.floor(document.body.clientWidth / sizeGrid);
+        rows = Math.floor(document.body.clientHeight / sizeGrid);
+
+        wrapper.style.setProperty("--columns", columns);
+        wrapper.style.setProperty("--rows", rows);
+
+        createTiles(columns * rows);
+    }
+
+    createGrid();
+
+    window.onresize = () => createGrid();
+</script>
+
+</html>
